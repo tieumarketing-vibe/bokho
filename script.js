@@ -82,13 +82,40 @@ if (contactForm) {
     e.preventDefault();
 
     // Get form data
+    // Get form data
     const formData = new FormData(contactForm);
+    const data = Object.fromEntries(formData.entries());
+    data.formType = 'contact'; // Đánh dấu đây là form liên hệ
 
-    // Show success message (you can replace this with actual form submission)
-    alert('Cảm ơn bạn đã liên hệ! Chúng tôi sẽ phản hồi sớm nhất có thể.');
+    const submitBtn = contactForm.querySelector('button[type="submit"]');
+    const originalBtnText = submitBtn.textContent;
+    submitBtn.textContent = 'Đang gửi...';
+    submitBtn.disabled = true;
 
-    // Reset form
-    contactForm.reset();
+    // Google Apps Script URL
+    const scriptURL = 'https://script.google.com/macros/s/AKfycbzr3fE0rW3QKOTFmsQhDREn6_vBARgDFCQW7u9zjBbYzMRdvt6BCZ6u07kRM-4DF2DW/exec';
+
+    // Send to Google Sheet
+    fetch(scriptURL, {
+      method: "POST",
+      mode: 'no-cors',
+      headers: {
+        'Content-Type': 'text/plain'
+      },
+      body: JSON.stringify(data)
+    })
+      .then(response => {
+        alert('Cảm ơn bạn đã liên hệ! Chúng tôi sẽ phản hồi sớm nhất có thể.');
+        contactForm.reset();
+      })
+      .catch(error => {
+        console.error('Error:', error);
+        alert('Có lỗi xảy ra. Vui lòng thử lại sau.');
+      })
+      .finally(() => {
+        submitBtn.textContent = originalBtnText;
+        submitBtn.disabled = false;
+      });
   });
 }
 
@@ -110,6 +137,15 @@ addToCartButtons.forEach(button => {
 
     // Update popup with product name
     popupProductName.textContent = productName;
+
+    // Auto-fill customer info if available
+    const savedInfo = localStorage.getItem('customer_info');
+    if (savedInfo) {
+      const info = JSON.parse(savedInfo);
+      document.getElementById('orderName').value = info.name || '';
+      document.getElementById('orderPhone').value = info.phone || '';
+      document.getElementById('orderAddress').value = info.address || '';
+    }
 
     // Show popup
     orderPopup.classList.add('active');
@@ -144,16 +180,49 @@ orderForm.addEventListener('submit', (e) => {
     phone: document.getElementById('orderPhone').value,
     address: document.getElementById('orderAddress').value,
     quantity: document.getElementById('orderQuantity').value,
-    note: document.getElementById('orderNote').value
+    note: document.getElementById('orderNote').value,
+    formType: 'order' // Đánh dấu đây là form đặt hàng
   };
 
-  console.log('Order data:', formData);
+  // Save customer info to localStorage
+  localStorage.setItem('customer_info', JSON.stringify({
+    name: formData.name,
+    phone: formData.phone,
+    address: formData.address
+  }));
 
-  // Show success message
-  alert(`Cảm ơn bạn đã đặt hàng!\n\nSản phẩm: ${formData.product}\nSố lượng: ${formData.quantity}\n\nChúng tôi sẽ liên hệ với bạn sớm nhất!`);
+  const submitBtn = orderForm.querySelector('button[type="submit"]');
+  const originalBtnText = submitBtn.textContent;
+  submitBtn.textContent = 'Đang gửi...';
+  submitBtn.disabled = true;
 
-  // Close popup and reset form
-  closeOrderPopup();
+  // Google Apps Script URL
+  const scriptURL = 'https://script.google.com/macros/s/AKfycbzr3fE0rW3QKOTFmsQhDREn6_vBARgDFCQW7u9zjBbYzMRdvt6BCZ6u07kRM-4DF2DW/exec';
+
+  fetch(scriptURL, {
+    method: 'POST',
+    body: JSON.stringify(formData),
+    mode: 'no-cors', // Quan trọng: Bỏ qua kiểm tra CORS của Google
+    headers: {
+      'Content-Type': 'text/plain' // Quan trọng: Tránh preflight request
+    }
+  })
+    .then(response => {
+      // Vì mode: 'no-cors' nên không đọc được response, mặc định là thành công
+      // Show success message
+      alert(`Cảm ơn bạn đã đặt hàng!\n\nSản phẩm: ${formData.product}\nSố lượng: ${formData.quantity}\n\nĐơn hàng đã được ghi nhận vào hệ thống.`);
+
+      // Close popup and reset form
+      closeOrderPopup();
+    })
+    .catch(error => {
+      console.error('Error:', error);
+      alert('Có lỗi xảy ra. Vui lòng thử lại hoặc gọi hotline.');
+    })
+    .finally(() => {
+      submitBtn.textContent = originalBtnText;
+      submitBtn.disabled = false;
+    });
 });
 
 // CTA Button handlers
@@ -311,6 +380,16 @@ detailAddToCart.addEventListener('click', () => {
   // Open order popup with product info
   popupProductName.textContent = productName;
   document.getElementById('orderQuantity').value = quantity;
+
+  // Auto-fill customer info if available
+  const savedInfo = localStorage.getItem('customer_info');
+  if (savedInfo) {
+    const info = JSON.parse(savedInfo);
+    document.getElementById('orderName').value = info.name || '';
+    document.getElementById('orderPhone').value = info.phone || '';
+    document.getElementById('orderAddress').value = info.address || '';
+  }
+
   orderPopup.classList.add('active');
   document.body.style.overflow = 'hidden';
 });

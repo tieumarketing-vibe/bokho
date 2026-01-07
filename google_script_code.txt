@@ -1,0 +1,89 @@
+// HƯỚNG DẪN CẬP NHẬT GOOGLE APPS SCRIPT (ĐỂ LƯU CẢ 2 FORM)
+// =========================================================
+
+// BƯỚC 1: Vào lại trang chỉnh sửa code của Google Sheet (Extensions > Apps Script)
+// BƯỚC 2: Xóa hết code cũ, thay bằng toàn bộ code mới dưới đây:
+
+function doPost(e) {
+  var lock = LockService.getScriptLock();
+  lock.tryLock(10000);
+
+  try {
+    var doc = SpreadsheetApp.getActiveSpreadsheet();
+    var data = JSON.parse(e.postData.contents);
+    
+    // XÁC ĐỊNH LOẠI FORM ĐỂ CHỌN SHEET
+    var sheetName = "Sheet1"; // Mặc định là sheet đầu tiên (Đơn hàng)
+    
+    if (data.formType === 'contact') {
+      sheetName = "Form contact"; // Tên tab cho form liên hệ
+    }
+
+    var sheet = doc.getSheetByName(sheetName);
+    
+    // Nếu chưa có tab "Form contact" thì tự tạo
+    if (!sheet) {
+      sheet = doc.insertSheet(sheetName);
+    }
+
+    // XỬ LÝ DỮ LIỆU TÙY THEO LOẠI FORM
+    if (data.formType === 'contact') {
+      // --- FORM LIÊN HỆ ---
+      // Tạo tiêu đề nếu chưa có
+      if (sheet.getLastRow() === 0) {
+        var headerRow = ["Thời gian", "Họ tên", "Số điện thoại", "Email", "Nội dung"];
+        sheet.getRange(1, 1, 1, 5).setValues([headerRow]);
+        sheet.getRange(1, 1, 1, 5).setFontWeight("bold");
+        sheet.setFrozenRows(1);
+      }
+      
+      // Thêm dòng mới
+      sheet.appendRow([
+        new Date(),
+        data.name,
+        "'" + data.phone,
+        data.email,
+        data.message
+      ]);
+      
+    } else {
+      // --- FORM ĐẶT HÀNG (Mặc định) ---
+      // Tạo tiêu đề nếu chưa có
+      if (sheet.getLastRow() === 0) {
+        var headerRow = ["Thời gian", "Họ tên", "Số điện thoại", "Địa chỉ", "Sản phẩm", "Số lượng", "Ghi chú"];
+        sheet.getRange(1, 1, 1, 7).setValues([headerRow]);
+        sheet.getRange(1, 1, 1, 7).setFontWeight("bold");
+        sheet.setFrozenRows(1);
+      }
+      
+      // Thêm dòng mới
+      sheet.appendRow([
+        new Date(),
+        data.name,
+        "'" + data.phone,
+        data.address,
+        data.product,
+        data.quantity,
+        data.note
+      ]);
+    }
+
+    return ContentService
+      .createTextOutput(JSON.stringify({ "result": "success" }))
+      .setMimeType(ContentService.MimeType.JSON);
+
+  } catch (e) {
+    return ContentService
+      .createTextOutput(JSON.stringify({ "result": "error", "error": e.toString() }))
+      .setMimeType(ContentService.MimeType.JSON);
+  } finally {
+    lock.releaseLock();
+  }
+}
+
+// BƯỚC 3: LƯU VÀ DEPLOY LẠI (QUAN TRỌNG)
+// 1. Nhấn nút "Triển khai" (Deploy) -> "Quản lý các bản triển khai" (Manage deployments).
+// 2. Bấm vào biểu tượng bút chì (Edit) ở bản hiện tại.
+// 3. Ở phần "Phiên bản" (Version), chọn "Mới" (New version).
+// 4. Bấm "Triển khai" (Deploy).
+// => KHÔNG CẦN LẤY LINK MỚI, LINK CŨ VẪN DÙNG ĐƯỢC.
