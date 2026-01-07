@@ -95,14 +95,20 @@ if (contactForm) {
     // Google Apps Script URL
     const scriptURL = 'https://script.google.com/macros/s/AKfycbzr3fE0rW3QKOTFmsQhDREn6_vBARgDFCQW7u9zjBbYzMRdvt6BCZ6u07kRM-4DF2DW/exec';
 
+    // Convert to URLSearchParams for x-www-form-urlencoded
+    const params = new URLSearchParams();
+    for (const key in data) {
+      params.append(key, data[key]);
+    }
+
     // Send to Google Sheet
     fetch(scriptURL, {
       method: "POST",
       mode: 'no-cors',
       headers: {
-        'Content-Type': 'text/plain'
+        'Content-Type': 'application/x-www-form-urlencoded'
       },
-      body: JSON.stringify(data)
+      body: params
     })
       .then(response => {
         alert('Cảm ơn bạn đã liên hệ! Chúng tôi sẽ phản hồi sớm nhất có thể.');
@@ -199,12 +205,18 @@ orderForm.addEventListener('submit', (e) => {
   // Google Apps Script URL
   const scriptURL = 'https://script.google.com/macros/s/AKfycbzr3fE0rW3QKOTFmsQhDREn6_vBARgDFCQW7u9zjBbYzMRdvt6BCZ6u07kRM-4DF2DW/exec';
 
+  // Convert to URLSearchParams
+  const params = new URLSearchParams();
+  for (const key in formData) {
+    params.append(key, formData[key]);
+  }
+
   fetch(scriptURL, {
     method: 'POST',
-    body: JSON.stringify(formData),
-    mode: 'no-cors', // Quan trọng: Bỏ qua kiểm tra CORS của Google
+    body: params,
+    mode: 'no-cors',
     headers: {
-      'Content-Type': 'text/plain' // Quan trọng: Tránh preflight request
+      'Content-Type': 'application/x-www-form-urlencoded'
     }
   })
     .then(response => {
