@@ -93,7 +93,7 @@ if (contactForm) {
     submitBtn.disabled = true;
 
     // Google Apps Script URL
-    const scriptURL = 'https://script.google.com/macros/s/AKfycbzr3fE0rW3QKOTFmsQhDREn6_vBARgDFCQW7u9zjBbYzMRdvt6BCZ6u07kRM-4DF2DW/exec';
+    const scriptURL = 'https://script.google.com/macros/s/AKfycbyFm1oLsGFGteS-smi_KOMsRo5TJA4HACEUhwYyTtgiymKJSE6R8O0vMxr9xPifN-uR-A/exec';
 
     // Convert to URLSearchParams for x-www-form-urlencoded
     const params = new URLSearchParams();
@@ -214,7 +214,7 @@ orderForm.addEventListener('submit', (e) => {
   submitBtn.disabled = true;
 
   // Google Apps Script URL
-  const scriptURL = 'https://script.google.com/macros/s/AKfycbzr3fE0rW3QKOTFmsQhDREn6_vBARgDFCQW7u9zjBbYzMRdvt6BCZ6u07kRM-4DF2DW/exec';
+  const scriptURL = 'https://script.google.com/macros/s/AKfycbyFm1oLsGFGteS-smi_KOMsRo5TJA4HACEUhwYyTtgiymKJSE6R8O0vMxr9xPifN-uR-A/exec';
 
   // Convert to URLSearchParams
   const params = new URLSearchParams();
