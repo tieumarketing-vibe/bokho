@@ -1,0 +1,131 @@
+// HƯỚNG DẪN KIỂM TRA VÀ SỬA LỖI DỮ LIỆU KHÔNG VỀ SHEET
+// =====================================================
+
+// **BƯỚC 1: Kiểm tra quyền truy cập Web App**
+// Mở trình duyệt và PASTE đường link này vào thanh địa chỉ:
+// https://script.google.com/macros/s/AKfycbyFm1oLsGFGteS-smi_KOMsRo5TJA4HACEUhwYyTtgiymKJSE6R8O0vMxr9xPifN-uR-A/exec
+
+// KẾT QUẢ ĐÚNG: Nếu hiện lỗi "Script function not found: doGet" hoặc một trang trống
+// KẾT QUẢ SAI: Nếu bắt bạn đăng nhập Google -> Quyền truy cập CHƯA ĐÚNG
+
+// **BƯỚC 2: Kiểm tra dữ liệu gửi đi**
+// Mở trang web: https://tieumarketing-vibe.github.io/bokho/
+// Bấm F12 -> Tab "Console"
+// Đặt hàng thử 1 đơn
+// XEM trong Console có log ra dữ liệu không
+
+// **BƯỚC 3: Nếu vẫn không được, làm theo hướng dẫn dưới đây**
+
+// =====================================================
+// CODE GOOGLE APPS SCRIPT CẬP NHẬT (PHIÊN BẢN AN TOÀN HỆT LỖI)
+// =====================================================
+
+function doPost(e) {
+  var lock = LockService.getScriptLock();
+  lock.tryLock(10000);
+
+  try {
+    var doc = SpreadsheetApp.getActiveSpreadsheet();
+    
+    // LOG để debug (có thể xem trong Apps Script execution log)
+    Logger.log("Received POST request");
+    Logger.log("Content: " + e.postData.contents);
+    
+    // Lấy dữ liệu (xử lý cả JSON lẫn form-urlencoded)
+    var data;
+    if (e.postData.type === 'application/x-www-form-urlencoded') {
+      data = e.parameter;
+    } else {
+      try {
+        data = JSON.parse(e.postData.contents);
+      } catch (parseError) {
+        data = e.parameter;
+      }
+    }
+    
+    Logger.log("Parsed data: " + JSON.stringify(data));
+    
+    // XÁC ĐỊNH TÊN SHEET
+    var sheetName = "orderform";
+    if (data.formType === 'contact') {
+      sheetName = "Form contact";
+    }
+    
+    Logger.log("Target sheet: " + sheetName);
+
+    var sheet = doc.getSheetByName(sheetName);
+    if (!sheet) {
+      Logger.log("Sheet not found, creating new sheet");
+      sheet = doc.insertSheet(sheetName);
+    }
+
+    // GHI DỮ LIỆU
+    if (data.formType === 'contact') {
+      if (sheet.getLastRow() === 0) {
+        var headerRow = ["Thời gian", "Họ tên", "Số điện thoại", "Email", "Nội dung"];
+        sheet.getRange(1, 1, 1, 5).setValues([headerRow]);
+        sheet.getRange(1, 1, 1, 5).setFontWeight("bold");
+      }
+      sheet.appendRow([new Date(), data.name || '', "'" + (data.phone || ''), data.email || '', data.message || '']);
+      Logger.log("Contact form data appended");
+      
+    } else {
+      if (sheet.getLastRow() === 0) {
+        var headerRow = ["Thời gian", "Họ tên", "Số điện thoại", "Địa chỉ", "Sản phẩm", "Số lượng", "Ghi chú", "Đơn giá", "Thành tiền"];
+        sheet.getRange(1, 1, 1, 9).setValues([headerRow]);
+        sheet.getRange(1, 1, 1, 9).setFontWeight("bold");
+      }
+      
+      sheet.appendRow([
+        new Date(), 
+        data.name || '', 
+        "'" + (data.phone || ''), 
+        data.address || '', 
+        data.product || '', 
+        data.quantity || '', 
+        data.note || '',
+        data.price || '',
+        data.total || ''
+      ]);
+      Logger.log("Order form data appended");
+    }
+
+    return ContentService
+      .createTextOutput(JSON.stringify({ "result": "success", "sheet": sheetName }))
+      .setMimeType(ContentService.MimeType.JSON);
+
+  } catch (error) {
+    Logger.log("Error occurred: " + error.toString());
+    return ContentService
+      .createTextOutput(JSON.stringify({ "result": "error", "error": error.toString() }))
+      .setMimeType(ContentService.MimeType.JSON);
+  } finally {
+    lock.releaseLock();
+  }
+}
+
+function doGet(e) {
+  return ContentService.createTextOutput("Web App is running. POST requests are being accepted.");
+}
+
+// =====================================================
+// CÁCH DEPLOY ĐÚNG (QUAN TRỌNG)
+// =====================================================
+// 1. Copy code này vào Apps Script
+// 2. Lưu (Ctrl + S)
+// 3. Bấm "Deploy" -> "Manage deployments"
+// 4. Bấm biểu tượng BÚT CHÌ (Edit)
+// 5. Version: Chọn "New version"
+// 6. Who has access: PHẢI CHỌN "Anyone" (không phải "Anyone with Google Account")
+// 7. Bấm Deploy
+// 8. Nếu có hỏi quyền truy cập, cho phép hết
+
+// =====================================================
+// SAU KHI DEPLOY, KIỂM TRA LẠI:
+// =====================================================
+// - Vào menu "Extensions" > "Apps Script"
+// - Bấm "Executions" (biểu tượng đồng hồ bên trái)
+// - Đặt hàng thử từ website
+// - Xem có log nào xuất hiện trong "Executions" không
+// - Nếu có log -> Code đang chạy
+// - Nếu không có log -> Quyền truy cập chưa đúng hoặc URL sai

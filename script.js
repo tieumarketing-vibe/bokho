@@ -222,6 +222,18 @@ orderForm.addEventListener('submit', (e) => {
     params.append(key, formData[key]);
   }
 
+  // Debug: Log data being sent
+  console.log('=== ORDER FORM DATA ===');
+  console.log('Product:', formData.product);
+  console.log('Name:', formData.name);
+  console.log('Phone:', formData.phone);
+  console.log('Address:', formData.address);
+  console.log('Quantity:', formData.quantity);
+  console.log('Price:', formData.price);
+  console.log('Total:', formData.total);
+  console.log('FormType:', formData.formType);
+  console.log('=======================');
+
   fetch(scriptURL, {
     method: 'POST',
     body: params,
