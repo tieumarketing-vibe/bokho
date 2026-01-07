@@ -180,15 +180,26 @@ orderPopup.addEventListener('click', (e) => {
 orderForm.addEventListener('submit', (e) => {
   e.preventDefault();
 
-  const formData = {
-    product: popupProductName.textContent,
-    name: document.getElementById('orderName').value,
-    phone: document.getElementById('orderPhone').value,
-    address: document.getElementById('orderAddress').value,
-    quantity: document.getElementById('orderQuantity').value,
-    note: document.getElementById('orderNote').value,
-    formType: 'order' // Đánh dấu đây là form đặt hàng
-  };
+  // Get form data using FormData (captures all fields with name attribute)
+  const formDataObj = new FormData(orderForm);
+  const formData = Object.fromEntries(formDataObj.entries());
+
+  // Add extra info
+  formData.product = popupProductName.textContent;
+  formData.formType = 'order';
+
+  // Calculate Price and Total
+  const productInfo = productData[formData.product];
+  if (productInfo) {
+    formData.price = productInfo.price;
+    // Parse price string (e.g. "350.000đ" -> 350000)
+    const priceNum = parseInt(productInfo.price.replace(/\./g, '').replace('đ', ''));
+    const qty = parseInt(formData.quantity);
+    formData.total = (priceNum * qty).toLocaleString('vi-VN') + 'đ';
+  } else {
+    formData.price = '';
+    formData.total = '';
+  }
 
   // Save customer info to localStorage
   localStorage.setItem('customer_info', JSON.stringify({

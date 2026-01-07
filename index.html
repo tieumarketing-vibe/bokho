@@ -484,23 +484,25 @@
       <form class="order-popup-form" id="orderForm">
         <div class="form-group">
           <label for="orderName">Họ và tên *</label>
-          <input type="text" id="orderName" class="form-input" placeholder="Nhập họ và tên" required>
+          <input type="text" id="orderName" name="name" class="form-input" placeholder="Nhập họ và tên" required>
         </div>
         <div class="form-group">
           <label for="orderPhone">Số điện thoại *</label>
-          <input type="tel" id="orderPhone" class="form-input" placeholder="Nhập số điện thoại" required>
+          <input type="tel" id="orderPhone" name="phone" class="form-input" placeholder="Nhập số điện thoại" required>
         </div>
         <div class="form-group">
           <label for="orderAddress">Địa chỉ giao hàng *</label>
-          <input type="text" id="orderAddress" class="form-input" placeholder="Nhập địa chỉ" required>
+          <input type="text" id="orderAddress" name="address" class="form-input" placeholder="Nhập địa chỉ" required>
         </div>
         <div class="form-group">
           <label for="orderQuantity">Số lượng *</label>
-          <input type="number" id="orderQuantity" class="form-input" placeholder="1" value="1" min="1" required>
+          <input type="number" id="orderQuantity" name="quantity" class="form-input" placeholder="1" value="1" min="1"
+            required>
         </div>
         <div class="form-group">
           <label for="orderNote">Ghi chú</label>
-          <textarea id="orderNote" class="form-input" rows="3" placeholder="Ghi chú thêm (nếu có)"></textarea>
+          <textarea id="orderNote" name="note" class="form-input" rows="3"
+            placeholder="Ghi chú thêm (nếu có)"></textarea>
         </div>
         <div class="order-popup-buttons">
           <button type="button" class="btn btn-secondary" id="cancelOrder">Hủy</button>

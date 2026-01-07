@@ -1,8 +1,5 @@
-// HƯỚNG DẪN SỬA LỖI KHÔNG GỬI ĐƯỢC TỪ GITHUB
+// HƯỚNG DẪN CẬP NHẬT GOOGLE APPS SCRIPT (CHIA SHEET THEO YÊU CẦU)
 // =========================================================
-
-// Vấn đề: Google chặn các trang web lạ (như GitHub) nếu bạn không mở quyền "Bất kỳ ai".
-// Giải pháp: Cập nhật code này và Cấu hình lại quyền truy cập.
 
 function doPost(e) {
   var lock = LockService.getScriptLock();
@@ -11,41 +8,58 @@ function doPost(e) {
   try {
     var doc = SpreadsheetApp.getActiveSpreadsheet();
     
-    // Lấy dữ liệu: Xử lý trường hợp gửi từ fetch với text/plain
+    // Lấy dữ liệu
     var data;
     try {
       data = JSON.parse(e.postData.contents);
     } catch (parseError) {
-      // Fallback nếu dữ liệu gửi dạng form-urlencoded (ít gặp với code hiện tại nhưng an toàn hơn)
       data = e.parameter;
     }
     
-    // XÁC ĐỊNH LOẠI FORM
-    var sheetName = "Sheet1"; 
+    // XÁC ĐỊNH TÊN SHEET DỰA VÀO LOẠI FORM
+    var sheetName = "orderform"; // Mặc định là sheet đơn hàng
+    
     if (data.formType === 'contact') {
       sheetName = "Form contact";
+    } else if (data.formType === 'order') {
+      sheetName = "orderform";
     }
 
     var sheet = doc.getSheetByName(sheetName);
+    // Nếu chưa có sheet thì tự tạo
     if (!sheet) {
       sheet = doc.insertSheet(sheetName);
     }
 
     // GHI DỮ LIỆU
     if (data.formType === 'contact') {
+      // --- FORM LIÊN HỆ (Sheet: Form contact) ---
       if (sheet.getLastRow() === 0) {
         var headerRow = ["Thời gian", "Họ tên", "Số điện thoại", "Email", "Nội dung"];
         sheet.getRange(1, 1, 1, 5).setValues([headerRow]);
         sheet.getRange(1, 1, 1, 5).setFontWeight("bold");
       }
       sheet.appendRow([new Date(), data.name, "'" + data.phone, data.email, data.message]);
+      
     } else {
+      // --- FORM ĐẶT HÀNG (Sheet: orderform) ---
       if (sheet.getLastRow() === 0) {
-        var headerRow = ["Thời gian", "Họ tên", "Số điện thoại", "Địa chỉ", "Sản phẩm", "Số lượng", "Ghi chú"];
-        sheet.getRange(1, 1, 1, 7).setValues([headerRow]);
-        sheet.getRange(1, 1, 1, 7).setFontWeight("bold");
+        var headerRow = ["Thời gian", "Họ tên", "Số điện thoại", "Địa chỉ", "Sản phẩm", "Số lượng", "Ghi chú", "Đơn giá", "Thành tiền"];
+        sheet.getRange(1, 1, 1, 9).setValues([headerRow]);
+        sheet.getRange(1, 1, 1, 9).setFontWeight("bold");
       }
-      sheet.appendRow([new Date(), data.name, "'" + data.phone, data.address, data.product, data.quantity, data.note]);
+      
+      sheet.appendRow([
+        new Date(), 
+        data.name, 
+        "'" + data.phone, 
+        data.address, 
+        data.product, 
+        data.quantity, 
+        data.note,
+        data.price,
+        data.total
+      ]);
     }
 
     return ContentService.createTextOutput(JSON.stringify({ "result": "success" })).setMimeType(ContentService.MimeType.JSON);
@@ -57,17 +71,9 @@ function doPost(e) {
   }
 }
 
-// Hàm này để kiểm tra xem Link có hoạt động không
-function doGet(e) {
-  return ContentService.createTextOutput("Kết nối thành công! Web App đã được cấu hình đúng quyền truy cập.");
-}
-
 // =========================================================
-// QUAN TRỌNG: CÁCH DEPLOY ĐỂ CHẠY ĐƯỢC TRÊN GITHUB
-// 1. Copy toàn bộ code này vào Apps Script.
-// 2. Nhấn nút "Triển khai" (Deploy) -> "Quản lý các bản triển khai" (Manage deployments).
-// 3. Bấm biểu tượng Bút chì (Edit).
-// 4. Mục "Phiên bản" (Version): Chọn "Phiên bản mới" (New version).
-// 5. Mục "Ai có quyền truy cập" (Who has access): CHỌN "Bất kỳ ai" (Anyone). <-- BẮT BUỘC
-// 6. Bấm "Triển khai" (Deploy).
+// LƯU Ý:
+// 1. Copy code này vào Apps Script.
+// 2. Nhớ DEPLOY lại bản mới (New Version) để áp dụng thay đổi.
+// 3. Code sẽ tự động tạo sheet "orderform" và "Form contact" nếu chưa có.
 // =========================================================
